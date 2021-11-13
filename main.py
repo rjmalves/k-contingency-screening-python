@@ -1,4 +1,5 @@
 from typing import Dict, Tuple
+import matplotlib
 import numpy as np
 import networkx as nx
 from networkx.readwrite import read_edgelist
@@ -32,3 +33,13 @@ def cfb_deltas(g: nx.Graph) -> Dict[Tuple[str, str], float]:
     return result
 
 cfb_deltas(g)
+
+from screening.models.network import Network
+from screening.controllers.screener import Screener
+from screening.controllers.viewer import Viewer
+import matplotlib.pyplot as plt
+n = Network.from_edgelist("graphs/itaipu11.txt")
+s = Screener(n)
+v = Viewer(n, s)
+fig = v.global_deltas_graph_plot(4)
+plt.savefig("t11_k4.png")

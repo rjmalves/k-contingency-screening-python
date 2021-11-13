@@ -1,6 +1,6 @@
-from typing import Dict
-import numpy as np
+from typing import Dict, Tuple
 import networkx as nx
+import numpy as np
 from networkx.algorithms.centrality import current_flow_betweenness_centrality
 
 from screening.models.network import Network
@@ -39,6 +39,28 @@ class Screener:
         if order not in self.__deltas:
             self.__eval_deltas(order)
         return self.__deltas[order]
+
+    def __eval_global_deltas(self, order: int):
+        deltas = self.deltas(order)
+        edges = list(self.__network.graph.edges)
+        global_deltas = {e: 0 for e in edges}
+        for contingency, delta in deltas.items():
+            for edge in contingency:
+                global_deltas[edge] += delta
+        self.__global_deltas[order] = global_deltas
+
+    def global_deltas(self, order: int) -> Dict[Tuple[str, str],
+                                                float]:
+        if order not in self.__global_deltas:
+            self.__eval_global_deltas(order)
+        return self.__global_deltas[order]
+
+    def normalized_global_deltas(self, order) -> Dict[Tuple[str, str],
+                                                      float]:
+        deltas = self.global_deltas(order)
+        max = np.max(list(deltas.values()))
+        norm_deltas = {e: d / max for e, d in deltas.items()}
+        return norm_deltas
 
     def __centrality(self, g: nx.Graph) -> Dict[str, float]:
         return current_flow_betweenness_centrality(g)
