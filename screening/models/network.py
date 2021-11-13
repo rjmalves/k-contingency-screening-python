@@ -4,6 +4,7 @@ from os import sep
 import numpy as np
 import networkx as nx
 from networkx.readwrite import read_edgelist
+from networkx.readwrite import read_graph6
 from itertools import combinations
 
 
@@ -28,6 +29,13 @@ class Network:
         name = normpath(filename).split(sep)[-1].split(".")[0]
         graph = read_edgelist(filename)
         return Network(name, graph)
+
+    @staticmethod
+    def from_graph6(filename: str) -> List["Network"]:
+        graphs = read_graph6(filename)
+        name = normpath(filename).split(sep)[-1].split(".")[0]
+        names = [f"{name}_{i}" for i in range(len(graphs))]
+        return [Network(n, g) for n, g in zip (names, graphs)]
 
     @property
     def name(self) -> str:
