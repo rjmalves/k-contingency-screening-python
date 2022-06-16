@@ -17,7 +17,15 @@ class Correlator:
 
     @staticmethod
     def __node_pair_metrics() -> Dict[str, Callable]:
-        return
+        return {
+            "Degree": nx.degree_centrality,
+            "EigenvectorCentrality": nx.eigenvector_centrality_numpy,
+            "KatzCentrality": nx.katz_centrality_numpy,
+            "ClosenessCentrality": nx.closeness_centrality,
+            "CurrentFlowCloseness": nx.current_flow_closeness_centrality,
+            "BetweennessCentrality": nx.betweenness_centrality,
+            "CommBetweenness": nx.communicability_betweenness_centrality
+        }
 
     @staticmethod
     def __edge_metrics() -> Dict[str, Callable]:
@@ -28,7 +36,22 @@ class Correlator:
             }
 
     def __eval_node_pair_metrics(self) -> pd.DataFrame:
-        return pd.DataFrame()
+        metrics = Correlator.__node_pair_metrics()
+        G = self.__network.graph
+        indices = []
+        results = {e: [] for e in G.edges}
+        for n, m in metrics.items():
+            indices.append(n)
+            metric_value = m(G)
+            for e in G.edges:
+                # Computes the average of the metric value for
+                # both nodes on the edge
+                e_m = 0.5 * (metric_value[e[0]] + metric_value[e[1]])
+                results[e].append(e_m)
+        # Makes the DF for viewing the results
+        df_result = pd.DataFrame(data=results,
+                                 index=indices)
+        return df_result
 
     def __eval_edge_metrics(self) -> pd.DataFrame:
         metrics = Correlator.__edge_metrics()
@@ -53,11 +76,11 @@ class Correlator:
         # Makes the DF for viewing the results
         df_result = pd.DataFrame(data=results,
                                  index=indices)
-        return df_result.T
+        return df_result
 
     def __eval_metrics(self) -> List[Callable]:
         return pd.concat([self.__eval_node_pair_metrics(),
-                          self.__eval_edge_metrics()])
+                          self.__eval_edge_metrics()]).T
 
     @property
     def metrics(self) -> pd.DataFrame:
